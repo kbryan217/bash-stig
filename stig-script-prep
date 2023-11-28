@@ -1,0 +1,28 @@
+#!/bin/bash
+# Author: Keith Walsh
+# Date: 11/24/2023
+# Class: IS 580-KB
+
+# DESCRIPTION
+
+# This script is designed to configure the system to be NON-Compliant with all the STIGs that the 'stig_check.sh' script from Keith W. checks for.
+# All, some, or non of these commands can be commented out to check the validity of the script and its ability to check the current settings.
+
+# Install telnetd so the STIG script will identify a need to fix
+sudo apt install telnetd -y 
+
+# Install the rsh-server so the STIG script will identify a need to fix
+sudo apt install rsh-server -y
+
+# Set the ctrl-alt-del.target setting to ensure the STIG script will identify a need to fix
+sudo systemctl unmask ctrl-alt-del.target
+sudo systemctl enable ctrl-alt-del.target
+sudo systemctl daemon-reload
+
+# Add 'nullok' to the common-password file to ensure the STIG script will identify a need to fix
+echo "nullok" | sudo tee -a /etc/pam.d/common-password
+
+# remove ssh services to that the STIG script will identify a need to fix (only one needs to be removed but below all 3 are removed)
+sudo apt remove openssh-client -y
+sudo apt remove openssh-server -y
+sudo apt remove openssh-sftp-server -y
