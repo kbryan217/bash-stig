@@ -1,0 +1,357 @@
+#!/bin/bash
+# Author: Keith Walsh
+# Date: 11/24/2023
+# Class: IS 580-KB
+
+#######################
+# Error Fix
+#############
+
+# Because some of this script was edited or resaved on a Windows computer, it may throw an error when it is ran. There are two methods i have found to fix this
+# and I have included them just in case I made a last minute adjustment before submission. 
+#
+# Medthod 1 (requires a package to be installed)
+# sudo apt-get install dos2unix
+# dos2unix your_script.sh
+#
+# OR
+#
+# Method 2 
+# sed -i 's/\r$//' your_script.sh
+
+########################
+## Script Description ##
+########################
+
+# This is a STIG checker for 5 of the CAT 1 STIGs for Ubuntu 20.04. This script has been tested on Ubuntu 22.04 and works on Ubuntu 22.04. There is a second 
+# script ("prep_stig.sh") that will make the 5 items in this STIG script non-compliant to start so you can test the detection and remediation of each of those
+# STIG items. 
+#
+# This script will run a check on each item. It will report that an item is compliant if it is configured inline with the STIG guidance
+# If an item is NOT Compliant, the script will inform the user and ASK if the user would like to fix the configuration. If the user responds with a 'y' or 'Y'
+# the script will then make the item compliant. If ANY other entry is input, the script will SKIP that item and move to the next item.
+#
+#
+# After action REPORT
+#
+# This Script is designed to clear all its activity and then print a final report that will check and relay the status of all script items following the 
+# running of the script. If something is not working and a user needs to 'debug' the script the command 'clear' that appears right below the block of '#'
+# can be removed to preserve the output of the script above the report 
+
+
+
+#### MODIFICATION ####
+# The STIG checklist tells the user to grep for the word 'telnetd' (and other items) only. If telnetd was never on the system, the return will be empty for 
+# this command so this could work, however if telnet was ever on the system even if it has already been removed, the command from the STIG checklist WILL 
+# return positive/TRUE because the entry is still in the compiter file. I adjusted the command to look for the double 'i' (or 'ii') preceeding telnetd as 
+# this is the indicator that the application is installed from what i can tell. Once the application has been removed the system entry changes the 'ii' to 
+# a 'rc'. modifying the command in this way has allowed me to test this script many times and prevent false positives.
+
+
+############################
+## STIG ID UBTU-20-010405 ##
+############################
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "" # Provides spacing for readability
+# This prints information to the user so that they know what STIG the script is checking
+echo "Checking for the telnet package (STIG ID UBTU-20-010405)"
+echo "" # Provides spacing for readability
+# This if statement is running a check to see if telnetd is installed. dpkg -l lists the installed packages, then grep -q runs a search without showing output
+if dpkg -l | grep -q "ii  telnetd"; then 
+    # this sets the telnetd variable to "true" if the query above is met (the search phrase is found in the dpkg list output)
+    telnetd=true
+else
+    # The esle statement catches everything that is not true and marks the telnetd variable to false 
+    telnetd=false
+fi # This ends the if statement
+
+# The below if statment looks at the value of the telnetd vairable that was assigned above. if it is set to true then telnetd is on the system and we echo statments to let
+# the user know it was found. then we prompt the user to ask if they want to remove the application
+if [ "$telnetd" == true ]; then
+    echo "❌ - telnetd was found on this system."
+    echo "Do you want to remove the telnetd application to make the system compliant? (y,n)"
+    # the read command takes the user input and stores it as a value in "response1"
+    read response1
+    # The if statement reacts to the user input.  if the user uses an upper or lower case "y" then it will procede to removing the application
+    if [[ "$response1" =~ ^[Yy]$ ]]; then
+        echo "########################"
+        echo "# Removing telnetd now #" # this is just information output for the user. this does not do anything to the system
+        echo "########################"
+        # The below command is the command that removes telnetd. the "-y prevents the user from needing to confirm the command. it auto-selects 'yes'"
+        # The '&>' redirects the output on the screen to /dev/null. this keeps the screen from printing all the removal printouts keeping the script output clean for the user.
+        sudo apt remove telnetd -y &> /dev/null
+    else
+        # This is a print statement that informs the user that they did not select to remove the telnetd app/service
+        echo "Leaving telnetd installed. This STIG is not compliant and will need to be documented as such"
+    fi
+else
+    # 
+    echo "✅ - telnetd was not found on this system. This STIG Item is compliant."
+
+fi
+
+############################
+## STIG ID UBTU-20-010406 ##
+############################
+
+# Description
+
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "" # Provides spacing for readability
+echo "Checking for the rsh-server package (STIG ID UBTU-20-010406)"
+echo "" # Provides spacing for readability
+
+if dpkg -l | grep -q "ii  rsh-server"; then
+    rsh_server=true
+else
+    rsh_server=false
+fi
+
+if [ "$rsh_server" == true ]; then
+    echo "❌ - rsh-server was found on this system."
+    echo "Do you want to remove the rsh-server application to make the system compliant? (y,n)"
+    read response2
+    if [[ "$response2" =~ ^[Yy]$ ]]; then
+        echo "###########################"
+        echo "# Removing rsh-server now #"
+        echo "###########################"
+        sudo apt remove rsh-server -y &> /dev/null
+    else
+        echo "Leaving rsh-server installed. This STIG is not compliant and will need to be documented as such"
+    fi
+else
+    echo "✅ - rsh-server was not found on this system. This STIG Item is compliant."
+fi
+
+############################
+## STIG ID UBTU-20-010460 ##
+############################
+
+# Description
+
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "" # Provides spacing for readability
+echo "Checking for ctrl-alt-del.target status (STIG ID UBTU-20-010460)"
+echo "" # Provides spacing for readability
+
+if sudo systemctl status ctrl-alt-del.target | grep -q -e "Loaded: loaded" -e "Loaded: loaded"; then
+    ctrl_alt_del=true
+else
+    ctrl_alt_del=false
+fi
+
+if [ "$ctrl_alt_del" == true ]; then
+    echo "❌ - ctrl-alt-del.target is not properly set on this system."
+    echo "Would you like to change this setting to make the system compliant? (y,n)"
+    read response3
+    if [[ "$response3" =~ ^[Yy]$ ]]; then
+        echo "########################################"
+        echo "# Updating the ctrl-alt-del.target now #"
+        echo "########################################"
+        sudo systemctl disable ctrl-alt-del.target &> /dev/null
+        sudo systemctl mask ctrl-alt-del.target &> /dev/null
+        sudo systemctl daemon-reload
+    else
+        echo "Leaving ctrl-alt-del.target misconfigured. This STIG is not compliant and will need to be documented as such"
+    fi
+else
+    echo "✅ - ctrl-alt-del.target correctly set on this system. This STIG Item is compliant."
+fi
+
+############################
+## STIG ID UBTU-20-010463 ##
+############################
+
+# Description
+#
+echo "" # Provides spacing for readability
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "+ Checking for the ability to use blank passwords (STIG ID UBTU-20-010463) +"
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "" # Provides spacing for readability
+if grep -q nullok /etc/pam.d/common-password; then
+    nullok=true
+else
+    nullok=false
+fi
+
+if [ "$nullok" == true ]; then
+    echo "❌ - Blank passwords are currently allowed on this system."
+    echo "Would you like to change this setting to make the system compliant? (y,n)"
+    read response4
+    if [[ "$response4" =~ ^[Yy]$ ]]; then
+        echo "#########################################"
+        echo "# Updating the password requirement now #"
+        echo "#########################################"
+        sudo sed -i 's/nullok//g' /etc/pam.d/common-password
+    else
+        echo "Preventing blank passwords is misconfigured. This STIG is not compliant and will need to be documented as such"
+    fi
+else
+    echo "✅ - The blank password restriction is correctly set on this system. This STIG Item is compliant."
+fi
+
+############################
+## STIG ID UBTU-20-010042 ##
+############################
+
+# Description
+#
+echo "" # Provides spacing for readability
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "+ Checking for the SSH packages (STIG ID UBTU-20-010042) +"
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "" # Provides spacing for readability
+
+found_ssh_client=false
+found_ssh_server=false
+found_ssh_sftp=false
+found_openssh=false
+
+if sudo dpkg -l | grep -q "ii  openssh-client"; then
+    found_ssh_client=true
+fi
+
+if sudo dpkg -l | grep -q "ii  openssh-server"; then
+    found_ssh_server=true
+fi
+
+if sudo dpkg -l | grep -q "ii  openssh-sftp-server"; then
+    found_ssh_sftp=true
+fi
+
+if "$found_ssh_client" == true && "$found_ssh_server" == true && "$found_ssh_sftp" == true; then
+    found_openssh=true
+fi
+
+if [ "$found_openssh" == false ]; then
+    echo "❌ - The openssh package is not installed on this system (either in part or in entirety)."
+    echo "Would you like to change this setting to make the system compliant? (y,n)"
+    read response5
+    if [[ "$response5" =~ ^[Yy]$ ]]; then
+        echo "##################################"
+        echo "# Installing the SSH package now #"
+        echo "##################################"
+        sudo apt install openssh-client openssh-server openssh-sftp-server -y &> /dev/null 
+        sudo systemctl enable sshd.service
+        sudo systemctl restart sshd.service
+    else
+        echo "SSH is not installed to protect the confidentiality and integrity of transmitted information." 
+        echo "This STIG is not compliant and will need to be documented as such"
+    fi
+else
+    echo "✅ - SSH is installed on this system. This STIG Item is compliant."
+fi
+
+################################################################################################################################################
+##############################################################################################################################################
+############################################################################################################################################
+##########################################################################################################################################
+########################################################################################################################################
+######################################################################################################################################
+####################################################################################################################################
+##################################################################################################################################
+################################################################################################################################
+##############################################################################################################################
+
+##### REPORT #########
+
+clear
+
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo ""
+echo " ii Final Report !!"
+echo "Below are the final compliance status indicators for each"
+echo "STIG item after making your selections with this script."
+echo ""
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+##################################
+# Final Report check for telnetd #
+##################################
+if dpkg -l | grep -q "ii  telnetd"; then
+    telnetd=true
+else
+    telnetd=false
+fi
+
+if [ "$telnetd" == true ]; then
+    echo "❌ - telnetd is NOT Compliant(STIG ID UBTU-20-010405)"
+else
+    echo "✅ - telnetd is Compliant (STIG ID UBTU-20-010405)"
+fi
+#####################################
+# Final Report check for rsh-server #
+#####################################
+if dpkg -l | grep -q "ii  rsh-server"; then
+    rsh_server=true
+else
+    rsh_server=false
+fi
+
+if [ "$rsh_server" == true ]; then
+    echo "❌ - rsh-server is NOT Compliant(STIG ID UBTU-20-010406)"
+else
+    echo "✅ - rsh-server is Compliant (STIG ID UBTU-20-010406)"
+fi
+
+##############################################
+# Final Report check for ctrl-alt-del.target #
+##############################################
+if sudo systemctl status ctrl-alt-del.target | grep -q -e "Loaded: loaded" -e "Loaded: loaded"; then
+    ctrl_alt_del=true
+else
+    ctrl_alt_del=false
+fi
+
+if [ "$ctrl_alt_del" == true ]; then
+    echo "❌ - ctrl-alt-del.target is NOT Compliant (STIG ID UBTU-20-010460)"
+else
+    echo "✅ - ctrl-alt-del.target is Compliant (STIG ID UBTU-20-010460)"
+fi
+
+#################################
+# Final Report check for nullok #
+#################################
+if grep -q nullok /etc/pam.d/common-password; then
+    nullok=true
+else
+    nullok=false
+fi
+
+if [ "$nullok" == true ]; then
+    echo "❌ - nullok is NOT Compliant (STIG ID UBTU-20-010463)"
+else
+    echo "✅ - nullok is Compliant (STIG ID UBTU-20-010463)"
+fi
+
+##############################
+# Final Report check for ssh #
+##############################
+# Here I reset all the variable back to false to ensure a clean check.
+found_ssh_client=false
+found_ssh_server=false
+found_ssh_sftp=false
+found_openssh=false
+
+if sudo dpkg -l | grep -q "ii  openssh-clien"; then
+    found_ssh_client=true
+fi
+
+if sudo dpkg -l | grep -q "ii  openssh-server"; then
+    found_ssh_server=true
+fi
+
+if sudo dpkg -l | grep -q "ii  openssh-sftp-server"; then
+    found_ssh_sftp=true
+fi
+
+if "$found_ssh_client" == true && "$found_ssh_server" == true && "$found_ssh_sftp" == true; then
+    found_openssh=true
+fi
+
+if "$found_openssh" == true; then
+    echo "✅ - ssh is Compliant (STIG ID UBTU-20-010042)"
+else
+    echo "❌ - ssh is NOT Compliant (STIG ID UBTU-20-010042)"
+fi
