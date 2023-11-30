@@ -3,22 +3,6 @@
 # Date: 11/24/2023
 # Class: IS 580-KB
 
-#######################
-# Error Fix
-#############
-
-# Because some of this script was edited or resaved on a Windows computer, it may throw an error when it is ran. There are two methods i have found to fix this
-# and I have included them just in case I made a last minute adjustment before submission. 
-#
-# Medthod 1 (requires a package to be installed)
-# sudo apt-get install dos2unix
-# dos2unix your_script.sh
-#
-# OR
-#
-# Method 2 
-# sed -i 's/\r$//' your_script.sh
-
 ########################
 ## Script Description ##
 ########################
@@ -70,8 +54,7 @@ fi # This ends the if statement
 if [ "$telnetd" == true ]; then
     echo "❌ - telnetd was found on this system."
     echo "Do you want to remove the telnetd application to make the system compliant? (y,n)"
-    # the read command takes the user input and stores it as a value in "response1"
-    read response1
+    read response1 # this is the variable that holds the user input to check if the script should resolve the item
     # The if statement reacts to the user input.  if the user uses an upper or lower case "y" then it will procede to removing the application
     if [[ "$response1" =~ ^[Yy]$ ]]; then
         echo "########################"
@@ -94,68 +77,68 @@ fi
 ## STIG ID UBTU-20-010406 ##
 ############################
 
-# Description
-
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "" # Provides spacing for readability
-echo "Checking for the rsh-server package (STIG ID UBTU-20-010406)"
+echo "Checking for the rsh-server package (STIG ID UBTU-20-010406)" # output for user awareness
 echo "" # Provides spacing for readability
 
+# this if statement is checking to see if the rsh-server software is installed on the system. if it is then the rsh_server value is set to true
 if dpkg -l | grep -q "ii  rsh-server"; then
     rsh_server=true
 else
-    rsh_server=false
+    rsh_server=false # if the software is not found on the system, the rsh_server value is set to false
 fi
 
+# if the rsh_server value is set to true then it will use this if statement to let the user know and prompt for user input to resolve the issue
 if [ "$rsh_server" == true ]; then
-    echo "❌ - rsh-server was found on this system."
-    echo "Do you want to remove the rsh-server application to make the system compliant? (y,n)"
-    read response2
-    if [[ "$response2" =~ ^[Yy]$ ]]; then
+    echo "❌ - rsh-server was found on this system." # this is a clear identifier printed to the user that this item is NOT compliant
+    echo "Do you want to remove the rsh-server application to make the system compliant? (y,n)" # this is the prompt for the user to let them know their choice for resolution
+    read response2 # this is the variable that holds the user input to check if the script should resolve the item
+    if [[ "$response2" =~ ^[Yy]$ ]]; then # this checks the users input to see if the script should resolve the issue or not
         echo "###########################"
-        echo "# Removing rsh-server now #"
+        echo "# Removing rsh-server now #" # this is to inform the user that the software will be removed (if the user had selected this option)
         echo "###########################"
-        sudo apt remove rsh-server -y &> /dev/null
+        sudo apt remove rsh-server -y &> /dev/null # this is the actual command to remove the software
     else
-        echo "Leaving rsh-server installed. This STIG is not compliant and will need to be documented as such"
+        echo "Leaving rsh-server installed. This STIG is not compliant and will need to be documented as such" # output for user awareness
     fi
 else
-    echo "✅ - rsh-server was not found on this system. This STIG Item is compliant."
+    echo "✅ - rsh-server was not found on this system. This STIG Item is compliant." # output for user awareness
 fi
 
 ############################
 ## STIG ID UBTU-20-010460 ##
 ############################
 
-# Description
-
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "" # Provides spacing for readability
-echo "Checking for ctrl-alt-del.target status (STIG ID UBTU-20-010460)"
+echo "Checking for ctrl-alt-del.target status (STIG ID UBTU-20-010460)" # output for user awareness
 echo "" # Provides spacing for readability
 
+# this if statment is checking to see if the setting is compliant or not and then setting the value of the "ctrl_alt_del" variable based on results
 if sudo systemctl status ctrl-alt-del.target | grep -q -e "Loaded: loaded" -e "Loaded: loaded"; then
     ctrl_alt_del=true
 else
     ctrl_alt_del=false
 fi
 
+# this if statement will inform the user if the setting is not compliant and then prompt the user with the option to resolve this setting
 if [ "$ctrl_alt_del" == true ]; then
-    echo "❌ - ctrl-alt-del.target is not properly set on this system."
-    echo "Would you like to change this setting to make the system compliant? (y,n)"
-    read response3
-    if [[ "$response3" =~ ^[Yy]$ ]]; then
+    echo "❌ - ctrl-alt-del.target is not properly set on this system."  # output for user awareness
+    echo "Would you like to change this setting to make the system compliant? (y,n)" # this is the prompt for the user to let them know their choice for resolution
+    read response3 # this is the variable that holds the user input to check if the script should resolve the item
+    if [[ "$response3" =~ ^[Yy]$ ]]; then # this checks the users input to see if the script should resolve the issue or not
         echo "########################################"
-        echo "# Updating the ctrl-alt-del.target now #"
+        echo "# Updating the ctrl-alt-del.target now #" # output for user awareness
         echo "########################################"
-        sudo systemctl disable ctrl-alt-del.target &> /dev/null
-        sudo systemctl mask ctrl-alt-del.target &> /dev/null
-        sudo systemctl daemon-reload
+        sudo systemctl disable ctrl-alt-del.target &> /dev/null # this is the actual command to remove the setting. the &> /dev/null to to remove cli output to the user to make the script cleaner
+        sudo systemctl mask ctrl-alt-del.target &> /dev/null # this is the actual command to remove the setting. the &> /dev/null to to remove cli output to the user to make the script cleaner
+        sudo systemctl daemon-reload # this is the actual command to remove the setting. 
     else
-        echo "Leaving ctrl-alt-del.target misconfigured. This STIG is not compliant and will need to be documented as such"
+        echo "Leaving ctrl-alt-del.target misconfigured. This STIG is not compliant and will need to be documented as such" # output for user awareness
     fi
 else
-    echo "✅ - ctrl-alt-del.target correctly set on this system. This STIG Item is compliant."
+    echo "✅ - ctrl-alt-del.target correctly set on this system. This STIG Item is compliant." # output for user awareness
 fi
 
 ############################
@@ -166,29 +149,32 @@ fi
 #
 echo "" # Provides spacing for readability
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "+ Checking for the ability to use blank passwords (STIG ID UBTU-20-010463) +"
+echo "+ Checking for the ability to use blank passwords (STIG ID UBTU-20-010463) +" # output for user awareness
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "" # Provides spacing for readability
+
+# this checks the setting to see if the vlaue is compliant and assigns the variable to true if the nullok word is in the file making this compliant. otherwise the value is assigned false
 if grep -q nullok /etc/pam.d/common-password; then
     nullok=true
 else
     nullok=false
 fi
 
+# this if statement will inform the user if the setting is not compliant and then prompt the user with the option to resolve this setting
 if [ "$nullok" == true ]; then
-    echo "❌ - Blank passwords are currently allowed on this system."
-    echo "Would you like to change this setting to make the system compliant? (y,n)"
-    read response4
+    echo "❌ - Blank passwords are currently allowed on this system." # output for user awareness
+    echo "Would you like to change this setting to make the system compliant? (y,n)" # this is the prompt for the user to let them know their choice for resolution
+    read response4 # this is the variable that holds the user input to check if the script should resolve the item
     if [[ "$response4" =~ ^[Yy]$ ]]; then
         echo "#########################################"
-        echo "# Updating the password requirement now #"
+        echo "# Updating the password requirement now #" # output for user awareness
         echo "#########################################"
-        sudo sed -i 's/nullok//g' /etc/pam.d/common-password
+        sudo sed -i 's/nullok//g' /etc/pam.d/common-password # this is the actual command to remove the setting.
     else
-        echo "Preventing blank passwords is misconfigured. This STIG is not compliant and will need to be documented as such"
+        echo "Preventing blank passwords is misconfigured. This STIG is not compliant and will need to be documented as such" # output for user awareness
     fi
 else
-    echo "✅ - The blank password restriction is correctly set on this system. This STIG Item is compliant."
+    echo "✅ - The blank password restriction is correctly set on this system. This STIG Item is compliant." # output for user awareness
 fi
 
 ############################
@@ -199,7 +185,7 @@ fi
 #
 echo "" # Provides spacing for readability
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "+ Checking for the SSH packages (STIG ID UBTU-20-010042) +"
+echo "+ Checking for the SSH packages (STIG ID UBTU-20-010042) +" # output for user awareness
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "" # Provides spacing for readability
 
@@ -225,22 +211,22 @@ if "$found_ssh_client" == true && "$found_ssh_server" == true && "$found_ssh_sft
 fi
 
 if [ "$found_openssh" == false ]; then
-    echo "❌ - The openssh package is not installed on this system (either in part or in entirety)."
-    echo "Would you like to change this setting to make the system compliant? (y,n)"
-    read response5
+    echo "❌ - The openssh package is not installed on this system (either in part or in entirety)." # output for user awareness
+    echo "Would you like to change this setting to make the system compliant? (y,n)" # this is the prompt for the user to let them know their choice for resolution
+    read response5 # this is the variable that holds the user input to check if the script should resolve the item
     if [[ "$response5" =~ ^[Yy]$ ]]; then
         echo "##################################"
-        echo "# Installing the SSH package now #"
+        echo "# Installing the SSH package now #" # output for user awareness
         echo "##################################"
-        sudo apt install openssh-client openssh-server openssh-sftp-server -y &> /dev/null 
-        sudo systemctl enable sshd.service
-        sudo systemctl restart sshd.service
+        sudo apt install openssh-client openssh-server openssh-sftp-server -y &> /dev/null  # this is the actual command to remove the setting.
+        sudo systemctl enable sshd.service # this is the actual command to remove the setting.
+        sudo systemctl restart sshd.service # this is the actual command to remove the setting.
     else
-        echo "SSH is not installed to protect the confidentiality and integrity of transmitted information." 
-        echo "This STIG is not compliant and will need to be documented as such"
+        echo "SSH is not installed to protect the confidentiality and integrity of transmitted information." # output for user awareness
+        echo "This STIG is not compliant and will need to be documented as such" # output for user awareness
     fi
 else
-    echo "✅ - SSH is installed on this system. This STIG Item is compliant."
+    echo "✅ - SSH is installed on this system. This STIG Item is compliant." # output for user awareness
 fi
 
 ################################################################################################################################################
@@ -280,6 +266,7 @@ if [ "$telnetd" == true ]; then
 else
     echo "✅ - telnetd is Compliant (STIG ID UBTU-20-010405)"
 fi
+echo ""
 #####################################
 # Final Report check for rsh-server #
 #####################################
@@ -294,7 +281,7 @@ if [ "$rsh_server" == true ]; then
 else
     echo "✅ - rsh-server is Compliant (STIG ID UBTU-20-010406)"
 fi
-
+echo ""
 ##############################################
 # Final Report check for ctrl-alt-del.target #
 ##############################################
@@ -309,7 +296,7 @@ if [ "$ctrl_alt_del" == true ]; then
 else
     echo "✅ - ctrl-alt-del.target is Compliant (STIG ID UBTU-20-010460)"
 fi
-
+echo ""
 #################################
 # Final Report check for nullok #
 #################################
@@ -324,7 +311,7 @@ if [ "$nullok" == true ]; then
 else
     echo "✅ - nullok is Compliant (STIG ID UBTU-20-010463)"
 fi
-
+echo ""
 ##############################
 # Final Report check for ssh #
 ##############################
