@@ -14,22 +14,6 @@
 # This script will run a check on each item. It will report that an item is compliant if it is configured inline with the STIG guidance
 # If an item is NOT Compliant, the script will inform the user and ASK if the user would like to fix the configuration. If the user responds with a 'y' or 'Y'
 # the script will then make the item compliant. If ANY other entry is input, the script will SKIP that item and move to the next item.
-#
-#
-# After action REPORT
-#
-# This Script is designed to clear all its activity and then print a final report that will check and relay the status of all script items following the 
-# running of the script. If something is not working and a user needs to 'debug' the script the command 'clear' that appears right below the block of '#'
-# can be removed to preserve the output of the script above the report 
-
-
-
-#### MODIFICATION ####
-# The STIG checklist tells the user to grep for the word 'telnetd' (and other items) only. If telnetd was never on the system, the return will be empty for 
-# this command so this could work, however if telnet was ever on the system even if it has already been removed, the command from the STIG checklist WILL 
-# return positive/TRUE because the entry is still in the compiter file. I adjusted the command to look for the double 'i' (or 'ii') preceeding telnetd as 
-# this is the indicator that the application is installed from what i can tell. Once the application has been removed the system entry changes the 'ii' to 
-# a 'rc'. modifying the command in this way has allowed me to test this script many times and prevent false positives.
 
 
 ############################
